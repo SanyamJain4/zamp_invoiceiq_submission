@@ -6,8 +6,8 @@ WORKDIR /srv
 # onnxruntime (OCR) needs libgomp; PyMuPDF/Pillow ship their own wheels.
 RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 libglib2.0-0 && rm -rf /var/lib/apt/lists/*
 
-COPY backend/requirements.txt backend/requirements.txt
-RUN pip install --no-cache-dir -r backend/requirements.txt
+COPY backend/requirements.txt backend/requirements-ocr.txt backend/requirements.txt.d/
+RUN pip install --no-cache-dir -r backend/requirements.txt.d/requirements-ocr.txt reportlab==4.2.5
 
 COPY backend backend
 COPY scripts scripts

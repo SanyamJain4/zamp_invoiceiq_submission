@@ -84,7 +84,9 @@ migration: `backend/alembic/versions/0001_initial_schema.py`.
 # 1. Backend
 python -m venv .venv                       # at the repo root
 .venv\Scripts\activate                     # Windows (macOS/Linux: source .venv/bin/activate)
-pip install -r backend/requirements.txt
+pip install -r backend/requirements-dev.txt   # everything: OCR + tests + sample-data generator
+# lean runtime only (~120 MB, no OCR for scanned PDFs):  pip install -r backend/requirements.txt
+# add OCR (~+200 MB):                                      pip install -r backend/requirements-ocr.txt
 
 # 2. Synthetic data: 17 PDFs, vendors, POs, PO history, test manifest (dates are relative to today)
 python scripts/generate_sample_data.py
@@ -107,6 +109,12 @@ cd frontend && npm install && npm run build      # then open http://127.0.0.1:80
 ## 14. Configure the AI key
 Copy `.env.example` to `.env` (repo root) and set **one** of `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY` (optionally `LLM_PROVIDER`, `LLM_MODEL`). Restart the API.
 The header shows `Extraction: anthropic` (or `offline parser`), and Settings shows the active provider and which keys are present (never the keys).
+
+## 14b. Hosting notes (read before deploying)
+This app is a **long-running server**, not a serverless function: it runs processing in background threads, streams progress over SSE,
+keeps SQLite + uploaded PDFs on disk and holds a process-wide PO lock. Deploy it as a container (Render, Railway, Fly.io, a VM) using the Dockerfiles below.
+On Vercel/Lambda-style platforms the full install exceeds the 500 MB function limit (`LAMBDA_SIZE_EXCEEDED`; use the lean `requirements.txt` and skip OCR),
+and even then background work, SSE and local files do not persist — host only the static frontend there and run the API elsewhere.
 
 ## 15. Docker
 ```bash
