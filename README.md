@@ -116,6 +116,14 @@ keeps SQLite + uploaded PDFs on disk and holds a process-wide PO lock. Deploy it
 On Vercel/Lambda-style platforms the full install exceeds the 500 MB function limit (`LAMBDA_SIZE_EXCEEDED`; use the lean `requirements.txt` and skip OCR),
 and even then background work, SSE and local files do not persist — host only the static frontend there and run the API elsewhere.
 
+### Split deployment: frontend on Vercel, API on a container host
+1. **Deploy the API** (Render / Railway / Fly.io, using `backend/Dockerfile`). Note its public `https://` URL. Set `CORS_ORIGINS` there to your frontend URL
+   (comma-separated, no trailing slash), e.g. `CORS_ORIGINS=https://invoiceiq-frontend.vercel.app,http://localhost:5173`; optionally `CORS_ORIGIN_REGEX` for Vercel preview URLs.
+2. **Deploy the frontend** (Vercel, root directory `frontend`, build `npm run build`, output `dist`). Add the environment variable `VITE_API_URL=https://<your-api-host>` (https, no trailing slash).
+   Vite reads it **at build time**, so **redeploy** after changing it. `frontend/vercel.json` rewrites all routes to `index.html` for client-side routing.
+3. All calls (REST, the SSE progress stream and the PDF page images) use `VITE_API_URL`; if it is unset the app uses the same origin (dev proxy / API-served UI).
+4. An https frontend cannot call an http API (mixed content), and the API's disk (SQLite + uploads) must be persistent: use a persistent disk/volume on the host.
+
 ## 15. Docker
 ```bash
 cp .env.example .env      # add a key if you have one

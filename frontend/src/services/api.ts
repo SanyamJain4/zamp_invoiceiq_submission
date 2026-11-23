@@ -2,6 +2,12 @@ import type {
   AppSettings, AuditEvent, InvoiceDetail, InvoiceRow, Metrics, Page, PODetail, PORow, Run, SampleItem, Trends, VendorDetail, VendorRow,
 } from '@/types'
 
+/**
+ * Base URL of the backend. Empty (default) = same origin, e.g. the Vite dev proxy or the API serving the built UI.
+ * For a split deployment (frontend on Vercel, API elsewhere) set VITE_API_URL at BUILD time, e.g. https://invoiceiq-api.onrender.com
+ */
+export const API_URL: string = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').replace(/\/+$/, '')
+
 export class ApiError extends Error {
   status: number
   blocking: { rule_id: string; rule_name: string; explanation: string }[]
@@ -15,7 +21,7 @@ export class ApiError extends Error {
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response
   try {
-    res = await fetch(`/api${path}`, init)
+    res = await fetch(`${API_URL}/api${path}`, init)
   } catch {
     throw new ApiError('Cannot reach the InvoiceIQ server. Is the backend running?', 0)
   }
@@ -66,12 +72,12 @@ export const api = {
     request<{ run_id: string }>(`/invoices/${id}/extraction`, json('PATCH', { corrections, reason, reviewer })),
   review: (id: number, action: 'APPROVE' | 'REJECT' | 'REQUEST_CLARIFICATION', justification: string, reviewer?: string) =>
     request<InvoiceDetail>(`/invoices/${id}/review`, json('POST', { action, justification, reviewer })),
-  pageUrl: (id: number, page: number, zoom: number) => `/api/invoices/${id}/pages/${page}.png?zoom=${zoom}`,
-  fileUrl: (id: number) => `/api/invoices/${id}/file`,
+  pageUrl: (id: number, page: number, zoom: number) => `${API_URL}/api/invoices/${id}/pages/${page}.png?zoom=${zoom}`,
+  fileUrl: (id: number) => `${API_URL}/api/invoices/${id}/file`,
 
   runs: (p: { page?: number; page_size?: number; status?: string } = {}) => request<Page<Run>>(`/runs${qs(p)}`),
   run: (runId: string) => request<Run>(`/runs/${runId}`),
-  eventsUrl: (runId: string) => `/api/runs/${runId}/events`,
+  eventsUrl: (runId: string) => `${API_URL}/api/runs/${runId}/events`,
 
   reviews: (include_resolved = false) => request<{ items: InvoiceRow[]; total: number }>(`/reviews${qs({ include_resolved })}`),
   purchaseOrders: (p: { search?: string; status?: string } = {}) => request<{ items: PORow[] }>(`/purchase-orders${qs(p)}`),

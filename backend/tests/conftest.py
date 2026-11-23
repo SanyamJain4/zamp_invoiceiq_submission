@@ -15,6 +15,8 @@ os.environ["DATABASE_URL"] = f"sqlite:///{(_tmp / 'test.db').as_posix()}"
 os.environ["UPLOAD_DIR"] = str(_tmp / "uploads")
 os.environ["SAMPLE_DIR"] = str(_tmp / "sample_data")
 os.environ["LLM_PROVIDER"] = "heuristic"
+os.environ["CORS_ORIGINS"] = "https://invoiceiq-frontend.vercel.app,http://localhost:5173"
+os.environ["CORS_ORIGIN_REGEX"] = r"https://invoiceiq-frontend-.*\.vercel\.app"
 # Keep any real keys aside for the optional live smoke test; the regular suite never touches the network.
 LIVE_KEYS = {k: os.environ.pop(k) for k in ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY") if os.environ.get(k)}
 

@@ -18,7 +18,8 @@ class Settings(BaseSettings):
     upload_dir: Path = BASE_DIR / "data" / "uploads"
     sample_dir: Path = ROOT_DIR / "sample_data"
     frontend_dist: Path = ROOT_DIR / "frontend" / "dist"  # if present, the API also serves the built UI (single-process deploy)
-    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"  # comma-separated exact origins, e.g. https://invoiceiq-frontend.vercel.app
+    cors_origin_regex: str | None = None  # optional, e.g. https://invoiceiq-.*\.vercel\.app to also allow preview deployments
 
     # Upload limits
     max_upload_mb: int = 15

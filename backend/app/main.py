@@ -35,7 +35,10 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(title="InvoiceIQ", version="1.0.0", description="AI-assisted invoice processing: PDF -> extraction -> deterministic checks -> explainable decision. "
               "Makes decisions only; it never executes payments.", lifespan=lifespan)
-app.add_middleware(CORSMiddleware, allow_origins=settings.cors_list(), allow_methods=["*"], allow_headers=["*"])
+# The browser needs permission when the UI (e.g. on Vercel) and the API live on different domains.
+# No cookies are used, so credentials are not enabled; origins come from CORS_ORIGINS (+ optional CORS_ORIGIN_REGEX).
+app.add_middleware(CORSMiddleware, allow_origins=settings.cors_list(), allow_origin_regex=settings.cors_origin_regex,
+                   allow_methods=["*"], allow_headers=["*"])
 app.include_router(invoices.router)
 app.include_router(runs.router)
 app.include_router(data.router)
